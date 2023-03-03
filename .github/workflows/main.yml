@@ -25,13 +25,13 @@ jobs:
         committer_email: actions@users.noreply.github.com
         message: "Latest data"
         
-    - name: Slack Notification on SUCCESS
-      if: success()
+    - name: Slack Notification on no commit
+      if: (success() && steps.add_commit.outputs.committed=='false')
       uses: tokorom/action-slack-incoming-webhook@main
       env:
           INCOMING_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
       with:
-          text: A successful scrape from Colleen!
+          text: Nothing was committed!
           
     - name: Slack Notification on FAILURE
       if: failure()
@@ -53,4 +53,27 @@ jobs:
                   }
                 ]
                 }
-            ] 
+    - name: Slack Notification on no new commits
+      if: (success() && steps.add_commit.outputs.committed=='true')
+      uses: tokorom/action-slack-incoming-webhook@main
+      env:
+        INCOMING_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+      with:
+        text: New file alert!
+        attachments: |
+         [
+            {
+            "color": "good",
+            "author_name": "${{ github.actor }}",
+            "author_icon": "${{ github.event.sender.avatar_url }}",
+            "fields": [
+                {
+                "title": "GitHub Actions URL",
+                "value": "https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}"
+                },
+                {
+                "title": "Commit URL",
+                "value": "https://github.com/${{github.repository}}/commits"
+                }
+            ]
+            } ]
